@@ -18,44 +18,95 @@ class ReminderListViewController: UICollectionViewController {
             $0.dueDate < $1.dueDate
         }
     }
+    var headerView : ProgressHeaderView?
+    
+    var progress : CGFloat {
+        let chunkSize = 1.0 / CGFloat(filteredReminders.count)
+        let progress = filteredReminders.reduce(0.0) {
+            let chunk = $1.isComplete ? chunkSize : 0
+            return $0 + chunk
+        }
+        return progress
+    }
     
     let listyStyleSegmentedControl = UISegmentedControl(items: [
         ReminderListStyle.all.name,ReminderListStyle.today.name,ReminderListStyle.future.name
     ])
-
+    //MARK: - UIViewController Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        let listLayout = listLayout()
-        collectionView.collectionViewLayout = listLayout
-        
-        let cellRegistration = UICollectionView.CellRegistration(handler: cellRegistrationHandler)
-        
-        dataSoutce = DataSource(collectionView: collectionView, cellProvider: { (collectionView: UICollectionView, indexPath: IndexPath, itemIdentifier : Reminder.ID) in
-            return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
-        })
-        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didPressAddbutton(_ :)))
-        addButton.accessibilityLabel = NSLocalizedString("Add reminder", comment: "Add button accesibility label")
-        navigationItem.rightBarButtonItem = addButton
-        navigationItem.titleView = listyStyleSegmentedControl
-        listyStyleSegmentedControl.selectedSegmentIndex = listStyle.rawValue
-        listyStyleSegmentedControl.addTarget(self, action: #selector(listStyleDidChange(_ :)), for: .valueChanged)
-        if #available(iOS 16, *) {
-            navigationItem.style = .navigator
-        }
+        prepareCollectionViewLayout()
+        prepareCollectionViewDataFlow()
+        prepareNavigationController()
+        prepareSegmentedControl()
         updateSnapshot()
-        collectionView.dataSource = dataSoutce
+       
     }
-    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        refreshBackground()
+    }
+    //MARK: - Overriden CollectionView Functions
+    override func collectionView(_ collectionView: UICollectionView, willDisplaySupplementaryView view: UICollectionReusableView, forElementKind elementKind: String, at indexPath: IndexPath) {
+        guard elementKind == ProgressHeaderView.elementKind,let progressView = view as? ProgressHeaderView else {return}
+        progressView.progress = progress
+    }
     override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
         let id = filteredReminders[indexPath.item].id
         pushDetailViewController(with: id)
         return false
     }
+    //MARK: - Initial Preperation Methods
+    private func prepareSegmentedControl() {
+        listyStyleSegmentedControl.selectedSegmentIndex = listStyle.rawValue
+        listyStyleSegmentedControl.addTarget(self, action: #selector(listStyleDidChange(_ :)), for: .valueChanged)
+    }
+    
+    private func prepareCollectionViewLayout() {
+        collectionView.backgroundColor = .todayGradientFutureBegin
+        let listLayout = listLayout()
+        collectionView.collectionViewLayout = listLayout
+        collectionView.dataSource = dataSoutce
+    }
+    
+    private func prepareCollectionViewDataFlow() {
+        let cellRegistration = UICollectionView.CellRegistration(handler: cellRegistrationHandler)
+        let headerRegistration = UICollectionView.SupplementaryRegistration(elementKind: ProgressHeaderView.elementKind, handler: suplementaryRegistrationHeader)
+        dataSoutce = DataSource(collectionView: collectionView, cellProvider: { (collectionView: UICollectionView, indexPath: IndexPath, itemIdentifier : Reminder.ID) in
+            return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: itemIdentifier)
+        })
+        dataSoutce.supplementaryViewProvider = { supplemanetayView,elementKind,indexPath in
+            return self.collectionView.dequeueConfiguredReusableSupplementary(using: headerRegistration, for: indexPath)
+        }
+    }
+    
+    private func prepareNavigationController() {
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didPressAddbutton(_ :)))
+        addButton.accessibilityLabel = NSLocalizedString("Add reminder", comment: "Add button accesibility label")
+        navigationItem.rightBarButtonItem = addButton
+        navigationItem.titleView = listyStyleSegmentedControl
+        if #available(iOS 16, *) {
+            navigationItem.style = .navigator
+        }
+    }
+    
+    
+    
+    
     
     @objc func listStyleDidChange(_ sender : UISegmentedControl) {
         listStyle = ReminderListStyle(rawValue : sender.selectedSegmentIndex) ?? .all
         updateSnapshot()
+        refreshBackground()
+    }
+    
+    func refreshBackground() {
+        collectionView.backgroundView = nil
+        let backgroundView = UIView()
+        let gradientLayer = CAGradientLayer.gradiendLayer(for: listStyle, in: collectionView.frame)
+        backgroundView.layer.addSublayer(gradientLayer)
+        collectionView.backgroundView = backgroundView
     }
     
     func pushDetailViewController(with id: Reminder.ID) {
@@ -81,9 +132,14 @@ class ReminderListViewController: UICollectionViewController {
     private func listLayout() -> UICollectionViewCompositionalLayout {
         var listConfiguration = UICollectionLayoutListConfiguration(appearance: .grouped)
         listConfiguration.showsSeparators = false
+        listConfiguration.headerMode = .supplementary
         listConfiguration.trailingSwipeActionsConfigurationProvider = makeSwipeActions
         listConfiguration.backgroundColor = .clear
         return UICollectionViewCompositionalLayout.list(using: listConfiguration)
+    }
+    
+    private func suplementaryRegistrationHeader(progressView : ProgressHeaderView,elementKind : String,indexPath : IndexPath) {
+        headerView = progressView
     }
 
 

@@ -29,6 +29,7 @@
 		802E718A2B4C1B6900B9EF54 /* DatePickerContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802E71892B4C1B6900B9EF54 /* DatePickerContentView.swift */; };
 		802E718C2B4C29D700B9EF54 /* ReminderListStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802E718B2B4C29D700B9EF54 /* ReminderListStyle.swift */; };
 		802E718E2B4C355400B9EF54 /* ProgressHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802E718D2B4C355400B9EF54 /* ProgressHeaderView.swift */; };
+		802E71902B4C49F000B9EF54 /* CAGradientLayer+ListStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 802E718F2B4C49F000B9EF54 /* CAGradientLayer+ListStyle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,7 @@
 		802E71892B4C1B6900B9EF54 /* DatePickerContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatePickerContentView.swift; sourceTree = "<group>"; };
 		802E718B2B4C29D700B9EF54 /* ReminderListStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderListStyle.swift; sourceTree = "<group>"; };
 		802E718D2B4C355400B9EF54 /* ProgressHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressHeaderView.swift; sourceTree = "<group>"; };
+		802E718F2B4C49F000B9EF54 /* CAGradientLayer+ListStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CAGradientLayer+ListStyle.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,6 +122,7 @@
 				802E716D2B4B561600B9EF54 /* Date+Today.swift */,
 				802E71812B4C0AFF00B9EF54 /* UIView+PinnedSubviews.swift */,
 				802E71852B4C0C7700B9EF54 /* UIContentConfiguratio+Stateless.swift */,
+				802E718F2B4C49F000B9EF54 /* CAGradientLayer+ListStyle.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -247,6 +250,7 @@
 				802E718C2B4C29D700B9EF54 /* ReminderListStyle.swift in Sources */,
 				802E71792B4BFBF100B9EF54 /* ReminderViewController.swift in Sources */,
 				802E717B2B4BFCA300B9EF54 /* ReminderViewController+Row.swift in Sources */,
+				802E71902B4C49F000B9EF54 /* CAGradientLayer+ListStyle.swift in Sources */,
 				802E71882B4C1ABD00B9EF54 /* TextViewContentView.swift in Sources */,
 				802E71582B4AF0E200B9EF54 /* SceneDelegate.swift in Sources */,
 				802E717F2B4C098A00B9EF54 /* ReminderViewController+CellConfiguration.swift in Sources */,

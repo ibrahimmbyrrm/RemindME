@@ -26,6 +26,7 @@ extension ReminderListViewController {
         if !ids.isEmpty {
             snapshot.reloadItems(ids)
         }
+        headerView?.progress = progress
         dataSoutce.apply(snapshot)
     }
     
