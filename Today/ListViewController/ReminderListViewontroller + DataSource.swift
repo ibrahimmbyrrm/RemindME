@@ -66,13 +66,30 @@ extension ReminderListViewController {
     }
     
     func updateReminder(_ reminder : Reminder) {
-        let index = reminders.indexOfReminder(with: reminder.id)
-        reminders[index] = reminder
-        print("reminder updated")
+        do {
+            try reminderStore.save(reminder)
+            let index = reminders.indexOfReminder(with: reminder.id)
+            reminders[index] = reminder
+        }catch TodayError.accessDenied {
+            
+        }catch {
+            showError(error)
+        }
+        
     }
     
     func addReminder(_ reminder : Reminder) {
-        reminders.append(reminder)
+        var reminder = reminder
+        do {
+            let idFromStore = try reminderStore.save(reminder)
+            reminder.id = idFromStore
+            reminders.append(reminder)
+        }catch TodayError.accessDenied {
+            
+        }catch {
+            showError(error)
+        }
+        
     }
     
     func completeReminder(with id:Reminder.ID) {
@@ -83,8 +100,15 @@ extension ReminderListViewController {
     }
     
     func deleteReminder(with id: Reminder.ID) {
-        let index = reminders.indexOfReminder(with: id)
-        reminders.remove(at: index)
+        do {
+            try reminderStore.remove(with: id)
+            let index = reminders.indexOfReminder(with: id)
+            reminders.remove(at: index)
+        }catch TodayError.accessDenied {
+        }catch {
+            showError(error)
+        }
+        
     }
     
     private func doneButtonConfiguration(for reminder : Reminder) -> UICellAccessory.CustomViewConfiguration {

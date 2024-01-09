@@ -10,8 +10,9 @@ import UIKit
 
 class ReminderListViewController: UICollectionViewController {
     
+    var reminderStore : ReminderStore { ReminderStore.shared }
     var dataSoutce : DataSource!
-    var reminders : [Reminder] = Reminder.sampleData
+    var reminders : [Reminder] = []
     var listStyle : ReminderListStyle = .all
     var filteredReminders : [Reminder] {
         return reminders.filter { listStyle.shouldInclude(date: $0.dueDate) }.sorted {
@@ -35,13 +36,13 @@ class ReminderListViewController: UICollectionViewController {
     //MARK: - UIViewController Life Cycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view.
+        prepareReminderStore()
         prepareCollectionViewLayout()
         prepareCollectionViewDataFlow()
         prepareNavigationController()
         prepareSegmentedControl()
         updateSnapshot()
-       
+        
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -61,6 +62,24 @@ class ReminderListViewController: UICollectionViewController {
     private func prepareSegmentedControl() {
         listyStyleSegmentedControl.selectedSegmentIndex = listStyle.rawValue
         listyStyleSegmentedControl.addTarget(self, action: #selector(listStyleDidChange(_ :)), for: .valueChanged)
+    }
+    
+    func prepareReminderStore() {
+        Task {
+            do {
+                try await reminderStore.requestAccess()
+                reminders = try await reminderStore.readAll()
+                NotificationCenter.default.addObserver(
+                    self, selector: #selector(eventStoreChanged(_:)), name: .EKEventStoreChanged, object: nil)
+            } catch TodayError.accessDenied, TodayError.accessRestricted {
+                #if DEBUG
+                reminders = Reminder.sampleData
+                #endif
+            } catch {
+                showError(error)
+            }
+            updateSnapshot()
+        }
     }
     
     private func prepareCollectionViewLayout() {
@@ -91,9 +110,22 @@ class ReminderListViewController: UICollectionViewController {
         }
     }
     
+    func reminderStoreChanged() {
+        Task {
+            reminders = try await reminderStore.readAll()
+            updateSnapshot()
+        }
+    }
     
-    
-    
+    func showError(_ error : Error) {
+        let alertTitle = NSLocalizedString("Error", comment: "Error alert title")
+        let alert = UIAlertController(title: alertTitle, message: error.localizedDescription, preferredStyle: .alert)
+        let actionTitle = NSLocalizedString("OK", comment: "Alert OK button title")
+        alert.addAction(UIAlertAction(title: actionTitle, style: .default,handler: { [weak self] _ in
+            self?.dismiss(animated: true)
+        }))
+        present(alert, animated: true)
+    }
     
     @objc func listStyleDidChange(_ sender : UISegmentedControl) {
         listStyle = ReminderListStyle(rawValue : sender.selectedSegmentIndex) ?? .all
@@ -141,7 +173,7 @@ class ReminderListViewController: UICollectionViewController {
     private func suplementaryRegistrationHeader(progressView : ProgressHeaderView,elementKind : String,indexPath : IndexPath) {
         headerView = progressView
     }
-
-
+    
+    
 }
 
