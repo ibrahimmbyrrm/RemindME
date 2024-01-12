@@ -8,18 +8,20 @@
 import UIKit
 
 extension ReminderListViewController {
-    @objc func eventStoreChanged(_ notification : NSNotification) {
-        reminderStoreChanged()
+    
+    @objc func listStyleDidChange(_ sender : UISegmentedControl) {
+        viewModel.listStyleDidChange(sender.selectedSegmentIndex)
     }
+    
     @objc func didPressButton(_ sender: ReminderDoneButton) {
         guard let id = sender.id else { return }
-        completeReminder(with: id)
+        viewModel.completeReminder(with: id)
     }
     @objc func didPressAddbutton(_ sender : UIBarButtonItem) {
         let reminder = Reminder(title: "", dueDate: Date.now)
         let viewController = ReminderViewController(reminder: reminder) { [weak self] reminder in
-            self?.addReminder(reminder)
-            self?.updateSnapshot()
+            self?.viewModel.addReminder(reminder)
+            self?.viewModel.updateSnapshot(reloading: nil)
             self?.dismiss(animated: true)
         }
         viewController.isAddingNewReminder = true

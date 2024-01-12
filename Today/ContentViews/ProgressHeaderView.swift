@@ -13,11 +13,14 @@ class ProgressHeaderView : UICollectionReusableView {
     
     var progress : CGFloat = 0 {
         didSet {
-            setNeedsLayout()
-            heightConstraints?.constant = progress * bounds.height
-            UIView.animate(withDuration: 0.2) { [weak self] in
-                self?.layoutIfNeeded()
+            DispatchQueue.main.async {
+                self.setNeedsLayout()
+                self.heightConstraints?.constant = self.progress * self.bounds.height
+                UIView.animate(withDuration: 0.2) { [weak self] in
+                    self?.layoutIfNeeded()
+                }
             }
+            
         }
     }
     private let upperView = UIView(frame: .zero)

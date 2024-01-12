@@ -8,8 +8,6 @@
 import UIKit
 
 extension ReminderListViewController {
-    typealias DataSource = UICollectionViewDiffableDataSource<Int,Reminder.ID>
-    typealias Snapshot = NSDiffableDataSourceSnapshot<Int, Reminder.ID>
     
     var reminderCompletedValue : String {
         NSLocalizedString("Completed", comment: "Reminder completed value")
@@ -17,21 +15,9 @@ extension ReminderListViewController {
     var reminderNotCompletedValue : String {
         NSLocalizedString("Not Completed", comment: "Reminder not completed value")
     }
-    
-    func updateSnapshot(reloading idsThatchanged: [Reminder.ID] = []) {
-        let ids = idsThatchanged.filter { id in filteredReminders.contains(where: { $0.id == id})}
-        var snapshot = Snapshot()
-        snapshot.appendSections([0])
-        snapshot.appendItems(filteredReminders.map({$0.id}))
-        if !ids.isEmpty {
-            snapshot.reloadItems(ids)
-        }
-        headerView?.progress = progress
-        dataSoutce.apply(snapshot)
-    }
-    
+
     func cellRegistrationHandler(cell : UICollectionViewListCell,indexPath : IndexPath,id : Reminder.ID) {
-        let reminder = reminder(with: id)
+        let reminder = viewModel.reminder(with: id)
         var contentConfiguration = cell.defaultContentConfiguration()
         contentConfiguration.text = reminder.title
         contentConfiguration.secondaryText = reminder.dueDate.dayAndTimeText
@@ -51,66 +37,15 @@ extension ReminderListViewController {
         
     }
     
-    func doneButtonAccesibilityAction(for reminder: Reminder) -> UIAccessibilityCustomAction {
+    private func doneButtonAccesibilityAction(for reminder: Reminder) -> UIAccessibilityCustomAction {
         let name = NSLocalizedString("Toggle completion", comment: "Reminder done button accesibility")
         let action = UIAccessibilityCustomAction(name: name) { [weak self] action in
-            self?.completeReminder(with: reminder.id)
+            self?.viewModel.completeReminder(with: reminder.id)
             return true
         }
         return action
     }
-    
-    func reminder(with id : Reminder.ID) -> Reminder {
-        let index = reminders.indexOfReminder(with: id)
-        return reminders[index]
-    }
-    
-    func updateReminder(_ reminder : Reminder) {
-        do {
-            try reminderStore.save(reminder)
-            let index = reminders.indexOfReminder(with: reminder.id)
-            reminders[index] = reminder
-        }catch TodayError.accessDenied {
-            
-        }catch {
-            showError(error)
-        }
-        
-    }
-    
-    func addReminder(_ reminder : Reminder) {
-        var reminder = reminder
-        do {
-            let idFromStore = try reminderStore.save(reminder)
-            reminder.id = idFromStore
-            reminders.append(reminder)
-        }catch TodayError.accessDenied {
-            
-        }catch {
-            showError(error)
-        }
-        
-    }
-    
-    func completeReminder(with id:Reminder.ID) {
-        var reminder = reminder(with: id)
-        reminder.isComplete.toggle()
-        updateReminder(reminder)
-        updateSnapshot(reloading: [id])
-    }
-    
-    func deleteReminder(with id: Reminder.ID) {
-        do {
-            try reminderStore.remove(with: id)
-            let index = reminders.indexOfReminder(with: id)
-            reminders.remove(at: index)
-        }catch TodayError.accessDenied {
-        }catch {
-            showError(error)
-        }
-        
-    }
-    
+
     private func doneButtonConfiguration(for reminder : Reminder) -> UICellAccessory.CustomViewConfiguration {
         let symbolName = reminder.isComplete ? "circle.fill" : "circle"
         let symbolConfiguration = UIImage.SymbolConfiguration(textStyle: .title1)
